@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Responsive viewport for mobile-friendly layout -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{% block title %}Cheche Online Chat{% endblock %}</title>
+
+    <!-- Bootstrap 5.3 CSS from CDN — no local static build step required -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+    >
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-light">
+
+    <!-- ==================== NAVBAR START ==================== -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+
+            <!-- Site brand / logo text -->
+            <a class="navbar-brand" href="{% url 'profiles:home' %}">
+                Cheche Online Chat
+            </a>
+
+            <!-- Hamburger toggle for small screens -->
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible navigation links -->
+            <div
+                class="collapse navbar-collapse"
+                id="mainNavbar"
+            >
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'profiles:home' %}">
+                            Home
+                        </a>
+                    </li>
+
+                    <!-- Placeholder links for future SaaS features -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            Chat History
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            Account
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+    <!-- ===================== NAVBAR END ===================== -->
+
+
+    <!-- Main content area — child templates override the content block -->
+    <main class="container py-5">
+       {% block content %}
+       {% endblock %}
+    </main>
+
+
+    <footer class="text-center text-secondary pb-4">
+        <small>
+            &copy; 2026 Cheche Online Chat. All rights reserved.
+        </small>
+    </footer>
+
+
+    <!-- jQuery — required for AJAX chat script in index.html -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Bootstrap JS bundle (includes Popper for dropdowns/collapse) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

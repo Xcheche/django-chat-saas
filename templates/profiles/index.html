@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block title %}Cheche AI Chat{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Preserve line breaks from Ollama responses without using .html() (XSS-safe) */
+  .chat-message-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+
+      <!-- Project introduction -->
+      <section class="mb-4">
+        <h1 class="display-5 fw-bold">
+          Cheche AI Chat — Powered by Ollama
+        </h1>
+        <p class="lead text-secondary">
+          This project demonstrates a Django chat app with AJAX (no page reload).
+          Instead of a paid OpenAI API key, it uses
+          <a href="https://ollama.com/" target="_blank" rel="noopener">Ollama</a>
+          to run AI models locally for free. See the
+          <code>docs/</code> folder for setup instructions.
+        </p>
+        <ul>
+          <li>
+            <strong>Ollama</strong> — free, local AI (what this project uses).
+            See <code>docs/SETUP.md</code>.
+          </li>
+          <li>
+            <strong>OpenAI API</strong> — optional paid alternative.
+            See <code>docs/OPENAI_API_KEY.md</code>.
+          </li>
+        </ul>
+      </section>
+
+
+      <!-- Chat card -->
+      <section class="card border-0 shadow-sm overflow-hidden">
+
+        <!-- Chat header -->
+        <div class="card-header bg-dark text-white px-4 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-1">Cheche AI Assistant</h5>
+              <small class="text-white-50">Local Ollama · gemma3:270m</small>
+            </div>
+            <span class="badge bg-success rounded-pill">Online</span>
+          </div>
+        </div>
+
+
+        <!-- Scrollable message list — JS appends bubbles here -->
+        <div class="card-body bg-body-tertiary overflow-auto p-3 p-md-4" style="height: 450px;">
+          <div id="list-group" class="list-group list-group-flush">
+            <!-- Messages injected by jQuery on submit -->
+          </div>
+        </div>
+
+
+        <!-- Chat input form -->
+        <div class="card-footer bg-white p-3">
+          <form id="chat-form">
+            {% csrf_token %}
+            <div class="input-group input-group-lg">
+              <input
+                type="text"
+                id="chat-input"
+                value="{% if request.POST.prompt %}{{ request.POST.prompt }}{% endif %}"
+               
+                name="message"
+                class="form-control"
+                placeholder="Type your message..."
+                aria-label="Type your message"
+                autocomplete="off"
+                required
+              >
+              <button type="submit" id="chat-button" class="btn btn-primary px-4">
+                <span id="button-label">Send</span>
+                <span id="button-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <p class="small text-secondary text-center mt-2 mb-0">
+            AI-generated responses may contain mistakes.
+          </p>
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /**
+   * AJAX chat handler
+   *
+   * Flow:
+   *   1. User submits form → prevent default page reload
+   *   2. Append user message bubble to #list-group
+   *   3. POST prompt + CSRF token to Django home view
+   *   4. On success, append AI reply bubble
+   *   5. On error, show a friendly error message
+   */
+  $("#chat-form").on("submit", function (e) {
+    e.preventDefault();
+
+    var question = $("#chat-input").val().trim();
+    if (!question) return;
+
+    // --- Show user message immediately (optimistic UI) ---
+    var userHtml = `
+      <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" onclick="return false;">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="32" height="32" class="rounded-circle flex-shrink-0">
+        <div class="d-flex gap-2 w-100 justify-content-between">
+          <div>
+            <p class="mb-0 opacity-75 chat-message-text"></p>
+          </div>
+        </div>
+      </a>
+    `;
+    var $userHtml = $(userHtml);
+    $userHtml.find("p").text(question);  // .text() prevents XSS
+    $("#list-group").append($userHtml);
+    scrollChatToBottom();
+
+    $("#chat-input").val("");
+
+    // --- Disable submit while waiting for Ollama ---
+    setLoading(true);
+
+    // --- AJAX POST to Django view ---
+    $.ajax({
+      type: "POST",
+      url: "{% url 'profiles:home' %}",
+      data: {
+        prompt: question,
+        csrfmiddlewaretoken: $("#chat-form input[name=csrfmiddlewaretoken]").val()
+      },
+      success: function (data) {
+        appendAiMessage(data.answer);
+      },
+      error: function (xhr) {
+        var msg = "Something went wrong. Is Ollama running? Try: ollama serve";
+        if (xhr.responseJSON && xhr.responseJSON.answer) {
+          msg = xhr.responseJSON.answer;
+        }
+        appendAiMessage(msg);
+      },
+      complete: function () {
+        setLoading(false);
+      }
+    });
+  });
+
+  /** Append an AI reply bubble to the message list. */
+  function appendAiMessage(text) {
+    var aiHtml = `
+      <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" onclick="return false;">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="AI" width="32" height="32" class="rounded-circle flex-shrink-0">
+        <div class="d-flex gap-2 w-100 justify-content-between">
+          <div>
+            <p class="mb-0 opacity-75 chat-message-text"></p>
+          </div>
+        </div>
+      </a>
+    `;
+    var $aiHtml = $(aiHtml);
+    $aiHtml.find("p").text(text);  // plain text + CSS pre-wrap for newlines
+    $("#list-group").append($aiHtml);
+    scrollChatToBottom();
+  }
+
+  /** Toggle loading spinner and disable the submit button. */
+  function setLoading(isLoading) {
+    $("#chat-button").prop("disabled", isLoading);
+    $("#chat-input").prop("disabled", isLoading);
+    $("#button-spinner").toggleClass("d-none", !isLoading);
+    $("#button-label").text(isLoading ? "Thinking..." : "Send");
+  }
+
+  /** Scroll the message pane to the latest message. */
+  function scrollChatToBottom() {
+    var pane = $("#list-group").closest(".card-body");
+    pane.scrollTop(pane[0].scrollHeight);
+  }
+</script>
+{% endblock %}
