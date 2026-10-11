@@ -16,12 +16,12 @@ want to switch back to OpenAI later.
 # openai.api_key = config.DevelopmentConfig.OPENAI_KEY
 
 
-import ollama  # Local LLM client; talks to Ollama daemon on localhost:11434
+# import ollama  # Local LLM client; talks to Ollama daemon on localhost:11434
+from google import genai
 
-
-# ---------------------------------------------------------------------------
-# Original OpenAI implementation (kept for reference / easy rollback)
-# ---------------------------------------------------------------------------
+# =================================================
+# ChatgPT Integration (OpenAI API)
+# ================================================
 # def generateChatResponse(prompt):
 #     """Send a prompt to OpenAI GPT-3.5-turbo and return the assistant reply."""
 #     messages = []
@@ -41,42 +41,101 @@ import ollama  # Local LLM client; talks to Ollama daemon on localhost:11434
 #
 #     return answer
 
+# =================================================
+# Ollama integration (local LLM inference)
+# ================================================
+# def generateChatResponse(prompt):
+#     """
+#     Generate an AI chat response for the given user prompt.
+
+#     Builds a message list (system + user), sends it to the local Ollama model,
+#     and returns plain text. Newlines are preserved for frontend rendering.
+
+#     Args:
+#         prompt (str): The user's question or message.
+
+#     Returns:
+#         str: The assistant's reply, or a friendly fallback if Ollama is unavailable.
+#     """
+#     # Build the conversation payload expected by the Ollama chat API
+#     messages = []
+#     messages.append({
+#         "role": "system",
+#         "content": "Your name is cheche. You are a helpful assistant.",
+#     })
+
+#     question = {}
+#     question["role"] = "user"
+#     question["content"] = prompt
+#     messages.append(question)
+
+#     try:
+#         # Call local Ollama — model must be pulled first: ollama pull gemma3:270m
+#         response = ollama.chat(model="gemma3:270m", messages=messages)
+#         print("Ollama response:", response)  # Debugging: log the raw response
+#         # Return plain text; frontend uses CSS white-space: pre-wrap for line breaks
+#         answer = response["message"]["content"]
+#     except Exception:
+#         # Covers: Ollama not running, model missing, network errors, etc.
+#         answer = (
+#             "Oops you beat the AI, try a different question, "
+#             "if the problem persists, come back later."
+#         )
+
+#     return answer
+
+
+# =================================================
+# Gemini API integration (Google's LLM service)
+# ================================================
+
+import os
+
+from google import genai
+from google.genai import types
+
 
 def generateChatResponse(prompt):
     """
-    Generate an AI chat response for the given user prompt.
-
-    Builds a message list (system + user), sends it to the local Ollama model,
-    and returns plain text. Newlines are preserved for frontend rendering.
+    Generate an AI chat response using the Gemini API.
 
     Args:
         prompt (str): The user's question or message.
 
     Returns:
-        str: The assistant's reply, or a friendly fallback if Ollama is unavailable.
+        str: The assistant's reply or a friendly fallback.
     """
-    # Build the conversation payload expected by the Ollama chat API
-    messages = []
-    messages.append({
-        "role": "system",
-        "content": "Your name is cheche. You are a helpful assistant.",
-    })
-
-    question = {}
-    question["role"] = "user"
-    question["content"] = prompt
-    messages.append(question)
 
     try:
-        # Call local Ollama — model must be pulled first: ollama pull gemma3:270m
-        response = ollama.chat(model="gemma3:270m", messages=messages)
-        # Return plain text; frontend uses CSS white-space: pre-wrap for line breaks
-        answer = response["message"]["content"]
-    except Exception:
-        # Covers: Ollama not running, model missing, network errors, etc.
-        answer = (
-            "Oops you beat the AI, try a different question, "
-            "if the problem persists, come back later."
+        # Read the Gemini API key from the environment
+        api_key = os.environ.get("GEMINI_API_KEY")
+
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is missing")
+
+        # Create the Gemini client
+        client = genai.Client(api_key=api_key)
+
+        # Send the system instruction and user's prompt
+        response = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=(
+                    "Your name is Cheche. " "You are a helpful assistant."
+                )
+            ),
         )
 
-    return answer
+        print("Gemini response:", response)
+
+        return response.text or "Sorry, I could not generate a response."
+
+    except Exception as error:
+        # Log the actual error for debugging
+        print(f"Gemini error: {error}")
+
+        return (
+            "Oops, you beat the AI. Try a different question. "
+            "If the problem persists, come back later."
+        )

@@ -10,7 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+import dj_database_url
+from django.contrib.messages import constants as messages
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-p3vcfh84agdm_o^ncjz0nw1asvgj-81h+qgg6#d$d0aar$zz_&"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-default-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -37,7 +41,6 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
 ]
 
 # Custom apps
@@ -62,8 +65,10 @@ INSTALLED_APPS = DJANGO_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "config.middleware.ClientIPMiddleware",  # Custom middleware to attach client IP address
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -94,10 +99,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"), conn_max_age=600
+    )
 }
 
 # Custom user model
@@ -148,3 +152,77 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 
 ADMIN_URL = "supersecret/"
+
+# =================================================
+# Login and Logout Redirects
+# =================================================
+LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/login/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+# =================================================
+# Login and Logout Redirects
+# ================================================
+
+
+# =================================================
+# Email configuration
+# ================================================
+if DEBUG:
+    # Development: send emails to Mailpit
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("MAILPIT_HOST", "mailpit")
+    EMAIL_PORT = int(os.environ.get("MAILPIT_PORT", "1025"))
+    EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = False
+    EMAIL_TIMEOUT = 10
+
+else:
+    # Production: send real emails through Brevo
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get(
+        "BREVO_SMTP_HOST",
+        "smtp-relay.brevo.com",
+    )
+    EMAIL_PORT = int(os.environ.get("BREVO_SMTP_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("BREVO_SMTP_USER")
+    EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_PASSWORD")
+    EMAIL_USE_TLS = True
+    EMAIL_USE_SSL = False
+    EMAIL_TIMEOUT = 20
+
+
+# Django messages framework configuration
+MESSAGE_TAGS = {
+    messages.DEBUG: "alert-secondary",
+    messages.INFO: "alert-info",
+    messages.SUCCESS: "alert-success",
+    messages.WARNING: "alert-warning",
+    messages.ERROR: "alert-danger",
+}
+
+
+# Settings for account lockout after failed login attempts
+
+
+MAX_LOGIN_ATTEMPTS = int(
+    os.environ.get("MAX_LOGIN_ATTEMPTS", 5)
+)  # Maximum failed login attempts before lockout
+
+ACCOUNT_LOCK_DURATION = timedelta(
+    minutes=int(os.environ.get("ACCOUNT_LOCK_DURATION", 15))
+)
+
+RESEND_CODE_COOLDOWN_SECONDS = int(
+    os.environ.get("RESEND_CODE_COOLDOWN_SECONDS", 30)
+)
+
+PASSWORD_RESET_LINK_TIMEOUT_SECONDS = int(
+    os.environ.get("PASSWORD_RESET_LINK_TIMEOUT_SECONDS", 3600)
+)
+
+SITE_NAME = os.environ.get("SITE_NAME", "My Website")
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", "My Website <noreply@yourdomain.com>"
+)

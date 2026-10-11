@@ -1,0 +1,28 @@
+{# templates/emails/account_unlocked.html #}
+
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+    Account Unlocked
+{% endblock title %}
+
+{% block content %}
+    <h2>Account Unlocked</h2>
+
+    <p>Dear {{ user.full_name }},</p>
+
+    <p>
+        The temporary security lock on your account has expired.
+        You can now attempt to sign in again.
+    </p>
+
+    <p>
+        If you did not make the previous login attempts, please
+        change your password and contact our support team.
+    </p>
+
+    <p>
+        Best regards,<br>
+        <strong>{{ site_name }} Security Team</strong>
+    </p>
+{% endblock content %}

@@ -1,0 +1,30 @@
+{# templates/emails/account_restored.html #}
+
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+    Account Restored
+{% endblock title %}
+
+{% block content %}
+    <h2 style="margin-top: 0; color: #15803d;">
+        Account Restored
+    </h2>
+
+    <p>Dear {{ user.full_name }},</p>
+
+    <p>
+        Your account suspension has been lifted. You can now
+        sign in again using your normal login information.
+    </p>
+
+    <p>
+        If you experience any difficulty signing in, please
+        contact our support team.
+    </p>
+
+    <p style="margin-bottom: 0;">
+        Best regards,<br>
+        <strong>{{ site_name }} Security Team</strong>
+    </p>
+{% endblock content %}

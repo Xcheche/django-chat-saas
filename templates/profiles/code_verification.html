@@ -1,0 +1,88 @@
+{% extends 'profiles/auth.html' %}
+{% load static %}
+{% block title %}Verify Code | Cheche Ai{% endblock %}
+{% block content %}
+
+<style>
+    .register-form {
+        width: 100%;
+        max-width: 330px;
+        margin: 0 auto;
+    }
+
+    .register-form .form-floating {
+        margin-top: 0 !important;
+    }
+
+    .register-form .form-floating + .form-floating {
+        margin-top: 0 !important;
+    }
+
+    .register-icon {
+        display: block;
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1rem;
+    }
+</style>
+
+<form class="register-form" method="post" action="{% url 'profiles:code_verification' %}">
+    {% csrf_token %}
+    <img class="register-icon" src="{% static 'images/ai-avatar.svg' %}" alt="Cheche" />
+    <h1 class="h3 mb-3 fw-normal text-center">Verify Code</h1>
+    <p>Enter the    code sent to {{ request.session.email }}.</p>
+    {{ form.as_p }}
+    <button class="btn btn-primary w-100 py-2" type="submit">Verify Code</button>
+</form>
+
+<!--======================Resend Code URL======================-->
+<div class="text-center">
+    <span>Didn't receive the code?</span>
+    <form method="post" action="{% url 'profiles:resend_code' %}">
+        {% csrf_token %}
+        <button
+            class="btn btn-link p-0 align-baseline"
+            id="resend-code-button"
+            type="submit"
+            {% if resend_cooldown_remaining %}disabled{% endif %}
+        >
+            <span id="resend-code-label">Resend code</span>
+        </button>
+    </form>
+</div>
+    <!--Use a different email address-->
+    <p class="text-center"><a href="{% url 'profiles:register' %}">Use a different email address</a></p>
+    <!--Added a link to contact support-->
+    <p class="text-center">Need help? <a href="#">Contact Support</a></p>
+
+    <p class="mt-4 mb-3 text-body-secondary">&copy; Fortitech Ai 2026</p>
+
+<!--======================Resend Code Countdown Script======================-->
+<script>
+    (() => {
+        const button = document.getElementById("resend-code-button");
+        const label = document.getElementById("resend-code-label");
+        let remaining = {{ resend_cooldown_remaining|default:0 }};
+
+        if (!button || !label || remaining <= 0) {
+            return;
+        }
+
+        const updateCountdown = () => {
+            if (remaining <= 0) {
+                button.disabled = false;
+                label.textContent = "Resend code";
+                return;
+            }
+
+            button.disabled = true;
+            label.textContent = `Resend code in ${remaining}s`;
+            remaining -= 1;
+            window.setTimeout(updateCountdown, 1000);
+        };
+
+        updateCountdown();
+    })();
+</script>
+
+{% endblock %}

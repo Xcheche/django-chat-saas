@@ -1,0 +1,31 @@
+{# templates/emails/account_suspended.html #}
+
+{% extends "emails/base_email.html" %}
+
+{% block title %}
+    Account Suspended
+{% endblock title %}
+
+{% block content %}
+    <h2 style="margin-top: 0; color: #b91c1c;">
+        Account Suspended
+    </h2>
+
+    <p>Dear {{ user.full_name }},</p>
+
+    <p>
+        Your account has been suspended by an administrator.
+        You will not be able to sign in until the suspension
+        is lifted.
+    </p>
+
+    <p>
+        If you believe this was done in error, please contact
+        our support team.
+    </p>
+
+    <p style="margin-bottom: 0;">
+        Best regards,<br>
+        <strong>{{ site_name }} Security Team</strong>
+    </p>
+{% endblock content %}

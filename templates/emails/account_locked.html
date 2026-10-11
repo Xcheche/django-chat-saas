@@ -1,0 +1,13 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Account Locked - Security Alert{% endblock title %}
+
+{% block content %}
+    <h2>Account Temporarily Locked</h2>
+    <p>Dear {{ user.full_name }},</p>
+    <p>Your account has been temporarily locked because of multiple failed login attempts.</p>
+    <p><strong>Lock duration:</strong> {{ lock_duration }} minutes</p>
+    <p><strong>IP address:</strong> {{ ip_address }}</p>
+    <p><strong>Attempt time:</strong> {{ attempted_at|date:"F j, Y, g:i A T" }}</p>
+    <p>Please wait for the lock period to expire before attempting to log in again.</p>
+{% endblock content %}

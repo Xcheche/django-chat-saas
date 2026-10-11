@@ -1,0 +1,40 @@
+{% extends 'profiles/auth.html' %}
+{% load static %}
+{% block title %}Login | Cheche Ai{% endblock %}
+{% block content %}
+
+<style>
+    .register-form {
+        width: 100%;
+        max-width: 330px;
+        margin: 0 auto;
+    }
+
+    .register-form .form-floating {
+        margin-top: 0 !important;
+    }
+
+    .register-form .form-floating + .form-floating {
+        margin-top: 0 !important;
+    }
+
+    .register-icon {
+        display: block;
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1rem;
+    }
+</style>
+
+<form class="register-form" method="post" action="{% url 'profiles:login' %}">
+    {% csrf_token %}
+    <img class="register-icon" src="{% static 'images/ai-avatar.svg' %}" alt="Cheche" />
+    <h1 class="h3 mb-3 fw-normal text-center">Please login</h1>
+    {{ form.as_p }}
+    <button class="btn btn-primary w-100 py-2" type="submit">Login</button>
+    <p><a href="{% url 'profiles:forgot_password' %}">Forgot your password?</a></p>
+    <p><a href="{% url 'profiles:register' %}">Don't have an account? Register here.</a></p>
+    <p class="mt-4 mb-3 text-body-secondary">&copy; Fortitech Ai 2026</p>
+</form>
+
+{% endblock %}

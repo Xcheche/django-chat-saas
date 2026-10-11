@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Cheche AI Chat{% endblock %}
 
 {% block extra_head %}
@@ -7,6 +8,15 @@
   .chat-message-text {
     white-space: pre-wrap;
     word-break: break-word;
+  }
+
+  /* Small rounded avatars for user and AI messages */
+  .chat-avatar {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 </style>
 {% endblock %}
@@ -100,6 +110,10 @@
 
 {% block extra_js %}
 <script>
+  // Static avatar URLs — swap for dynamic user/profile images later
+  var USER_AVATAR_URL = "{% static 'images/user-avatar.svg' %}";
+  var AI_AVATAR_URL = "{% static 'images/ai-avatar.svg' %}";
+
   /**
    * AJAX chat handler
    *
@@ -119,7 +133,7 @@
     // --- Show user message immediately (optimistic UI) ---
     var userHtml = `
       <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" onclick="return false;">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" width="32" height="32" class="rounded-circle flex-shrink-0">
+        <img src="${USER_AVATAR_URL}" alt="Cheche" class="chat-avatar">
         <div class="d-flex gap-2 w-100 justify-content-between">
           <div>
             <p class="mb-0 opacity-75 chat-message-text"></p>
@@ -165,7 +179,7 @@
   function appendAiMessage(text) {
     var aiHtml = `
       <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" onclick="return false;">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="AI" width="32" height="32" class="rounded-circle flex-shrink-0">
+        <img src="${AI_AVATAR_URL}" alt="Cheche AI" class="chat-avatar">
         <div class="d-flex gap-2 w-100 justify-content-between">
           <div>
             <p class="mb-0 opacity-75 chat-message-text"></p>
