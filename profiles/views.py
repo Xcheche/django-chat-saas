@@ -74,9 +74,12 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect("profiles:home")
 
-    generic_error = (
-        "Invalid login details or account temporarily unavailable."
-    )
+    def generic_error(attempts_remaining):
+        return (
+            "Invalid login details or account temporarily unavailable. "
+            f"You have {attempts_remaining} attempt(s) remaining before "
+            "your account is temporarily locked."
+        )
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
@@ -96,7 +99,10 @@ def login_view(request):
 
                 # Do not reveal whether the email is registered.
                 if user_record is None:
-                    messages.error(request, generic_error)
+                    messages.error(
+                        request,
+                        generic_error(settings.MAX_LOGIN_ATTEMPTS),
+                    )
 
                     return render(
                         request,
@@ -106,7 +112,10 @@ def login_view(request):
 
                 # Permanently disabled account.
                 if not user_record.is_active:
-                    messages.error(request, generic_error)
+                    messages.error(
+                        request,
+                        generic_error(settings.MAX_LOGIN_ATTEMPTS),
+                    )
 
                     return render(
                         request,
@@ -245,7 +254,15 @@ def login_view(request):
                         ]
                     )
 
-                    messages.error(request, generic_error)
+                    attempts_remaining = max(
+                        0,
+                        settings.MAX_LOGIN_ATTEMPTS
+                        - user_record.failed_login_attempts,
+                    )
+                    messages.error(
+                        request,
+                        generic_error(attempts_remaining),
+                    )
 
     else:
         form = UserLoginForm()
@@ -292,7 +309,8 @@ def register_view(request):
             )
             return redirect("profiles:code_verification")
 
-    form = UserRegisterForm()
+    if request.method == "GET":
+        form = UserRegisterForm()
     return render(request, "profiles/register.html", {"form": form})
 
 
@@ -411,7 +429,6 @@ def code_verification(request):
             expected_code = request.session.get("register_code")
             if expected_code and entered_code == expected_code:
                 user = CustomUser.objects.create_user(
-                    username=request.session["email"],
                     email=request.session["email"],
                     full_name=request.session["full_name"],
                     password=request.session["password"],

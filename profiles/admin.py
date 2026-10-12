@@ -1,4 +1,4 @@
-# admin.py
+"""Django admin configuration for users and user profiles."""
 
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
@@ -11,9 +11,10 @@ from .models import CustomUser, Profiles
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
+    """Manage email-authenticated users and their account security state."""
+
     list_display = (
         "email",
-        "username",
         "full_name",
         "account_status",
         "failed_login_attempts",
@@ -31,7 +32,6 @@ class CustomUserAdmin(UserAdmin):
 
     search_fields = (
         "email",
-        "username",
         "full_name",
     )
 
@@ -45,7 +45,8 @@ class CustomUserAdmin(UserAdmin):
         "date_joined",
     )
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
         (
             _("Personal Information"),
             {
@@ -65,18 +66,25 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
 
-    add_fieldsets = UserAdmin.add_fieldsets + (
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "password1", "password2"),
+            },
+        ),
         (
             _("Personal Information"),
             {
                 "fields": (
                     "full_name",
-                    "email",
                 ),
             },
         ),
     )
 
+    # These actions keep account status changes consistent and notify users.
     actions = (
         "suspend_accounts",
         "restore_accounts",
@@ -195,6 +203,8 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Profiles)
 class ProfileAdmin(admin.ModelAdmin):
+    """Display profile records with searchable fields from the related user."""
+
     list_display = (
         "user",
         "user_email",
@@ -204,7 +214,6 @@ class ProfileAdmin(admin.ModelAdmin):
 
     search_fields = (
         "user__email",
-        "user__username",
         "user__full_name",
         "credits",
     )

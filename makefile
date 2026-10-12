@@ -134,3 +134,13 @@ static:
 	@echo "$(BLUE)📦 Collecting static files...$(RESET)"
 	@docker compose exec web python manage.py collectstatic --noinput
 	@echo "$(GREEN)✅ Static files collected!$(RESET)"
+
+
+################################Test##########################
+test-general:
+	docker compose exec web pytest -v
+test-functional:
+	docker compose exec web pytest -m functional
+test-by-name:
+	@read -p "Enter the test name (e.g., test_home.py): " test_name; \
+	docker compose exec web pytest -v tests/functional/$$test_name

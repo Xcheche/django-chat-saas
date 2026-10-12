@@ -13,8 +13,14 @@ from django.contrib import admin
 from django.urls import include, path
 
 from config.settings import ADMIN_URL
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
+    path(
+            f"{ADMIN_URL}logout/",
+            LogoutView.as_view(next_page=f"/{ADMIN_URL}login/"),
+            name="admin_logout",
+        ),
     path(ADMIN_URL, admin.site.urls),
     path("", include("profiles.urls", namespace="profiles")),
     # Django Debug Toolbar (only in DEBUG mode)
@@ -28,3 +34,6 @@ if settings.DEBUG:
 
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+#TODO: Fix browser reload issue with Django 6.0 and Django Debug Toolbar. See
+#TODO: Fix debug toolbar issue with Django 6.0 and Django Debug Toolbar. See

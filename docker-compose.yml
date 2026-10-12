@@ -28,6 +28,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      selenium:
+        condition: service_started
     env_file:
       - .env
     restart: unless-stopped
@@ -37,7 +39,10 @@ services:
     restart: unless-stopped
     ports:
     - "8026:8025" # Mailpit browser interface
-    - "1025:1025" # SMTP server  
+    - "1025:1025" # SMTP server 
+  selenium:
+    image: selenium/standalone-chrome:latest
+    shm_size: "2gb"   
 
 volumes:
   postgres_data:

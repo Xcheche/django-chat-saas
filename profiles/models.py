@@ -5,6 +5,7 @@ CustomUser extends Django's built-in user so we can add profile fields later
 (e.g. subscription tier, API usage limits) without migrating away from auth.
 """
 
+from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -13,27 +14,21 @@ from common.models import TimeStampedModel
 from config import settings
 from .enums import AccountStatus
 from django.utils.translation import gettext_lazy as _
+from .manager import CustomUserManager
+
+
+
 
 # ============================================
 # Custom User Model
 # ============================================
-# class CustomUser(AbstractUser, TimeStampedModel):
-#     """
-#     Project-wide user model (see AUTH_USER_MODEL in settings).
-
-#     Uses email as the unique identifier for authentication instead of username.
-#     """
-
-#     email = models.EmailField(unique=True)
-
-
-#     USERNAME_FIELD = "email"
-#     REQUIRED_FIELDS = ["username"]
 class CustomUser(AbstractUser, TimeStampedModel):
     """
     Project-wide user model (see AUTH_USER_MODEL in settings).
     Uses email as the unique identifier for authentication instead of username.
     """
+
+    username = None
 
     email = models.EmailField(
         _("Email Address"),
@@ -44,6 +39,8 @@ class CustomUser(AbstractUser, TimeStampedModel):
     full_name = models.CharField(
         _("Full Name"),
         max_length=150,
+        blank=True,
+        default="",
     )
 
     # Your account security fields
@@ -71,8 +68,10 @@ class CustomUser(AbstractUser, TimeStampedModel):
         default=False,
     )
 
+    objects = CustomUserManager()
+
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "full_name"]
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return f"{self.email} - {self.full_name}"
