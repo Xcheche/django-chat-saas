@@ -26,20 +26,20 @@ from common.emails import (
     send_new_verification_code_email,
     send_password_reset_email,
 )
-from .enums import AccountStatus
-from .forms import (
+from .profiles.enums import AccountStatus
+from .profiles.forms import (
     ForgotPasswordForm,
     ResetPasswordForm,
     UserLoginForm,
     UserRegisterForm,
     VerifyCodeForm,
 )
-from .models import CustomUser, ResetLink
+from .profiles.models import CustomUser, ResetLink
 
 CustomUser = get_user_model()
 
 # ============ AI engine for generating chat responses==========
-from .ai_engine import generateChatResponse
+from .profiles.ai_engine import generateChatResponse
 
 
 # =================================================

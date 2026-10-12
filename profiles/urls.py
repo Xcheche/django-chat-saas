@@ -12,9 +12,9 @@ from . import views
 app_name = "profiles"
 
 urlpatterns = [
-    # Single endpoint: GET renders chat UI, POST handles AJAX messages
     path("", views.home, name="home"),
-    # Authentication endpoints
+    # AJAX endpoint for checking the status of a chat task
+    path("chat-status/<str:task_id>/", views.chat_task_status, name="chat_task_status"),
     path("logout/", views.logout_view, name="logout"),
     path("login/", views.login_view, name="login"),
     path("register/", views.register_view, name="register"),

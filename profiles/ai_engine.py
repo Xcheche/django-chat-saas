@@ -118,7 +118,7 @@ def generateChatResponse(prompt):
 
         # Send the system instruction and user's prompt
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-3-flash-preview",
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=(
@@ -127,13 +127,13 @@ def generateChatResponse(prompt):
             ),
         )
 
-        print("Gemini response:", response)
+        # print("Gemini response:", response)
 
         return response.text or "Sorry, I could not generate a response."
 
     except Exception as error:
         # Log the actual error for debugging
-        print(f"Gemini error: {error}")
+        # print(f"Gemini error: {error}")
 
         return (
             "Oops, you beat the AI. Try a different question. "
