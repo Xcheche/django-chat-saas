@@ -25,3 +25,31 @@ def site_url(live_server):
         return configured_url
 
     return f"http://web:{urlparse(live_server.url).port}"
+
+
+
+
+
+
+
+# For register view 
+@pytest.fixture
+def valid_data():
+    return {
+        "email": "newuser@example.com",
+        "full_name": "New User",
+        "password1": "StrongPass123!",
+        "password2": "StrongPass123!",
+    }
+
+
+@pytest.fixture
+def sent_codes(monkeypatch):
+    """Replaces the email sender with a fake that records its calls."""
+    calls = []
+    monkeypatch.setattr(
+        "profiles.views.register.send_new_verification_code_email",
+        lambda email, code: calls.append((email, code)),
+        raising=False,
+    )
+    return calls

@@ -11,11 +11,7 @@ from ..enums import AccountStatus
 from ..forms import UserRegisterForm
 from ..models import CustomUser
 from .anonymous_required import anonymous_required
-from common.emails import (
-    
-    send_new_verification_code_email,
-   
-)
+from common.emails import send_new_verification_code_email
 
 
 #================================================

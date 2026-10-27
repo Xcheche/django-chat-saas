@@ -63,3 +63,5 @@ google-genai
 pytest 
 pytest-django
 selenium
+Markdown
+Pygments

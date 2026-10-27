@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from celery.result import AsyncResult
+import markdown
 
 from ..tasks import generate_chat_response_task
 
@@ -21,7 +22,6 @@ def home(request):
         # Guard against empty submissions before calling the LLM
         if not prompt:
             return JsonResponse({"answer": "Please enter a message."}, status=400)
-
         task = generate_chat_response_task.delay(prompt)
         return JsonResponse({"task_id": task.id}, status=202)
 
@@ -40,7 +40,15 @@ def chat_task_status(request, task_id):
     task = AsyncResult(task_id)
 
     if task.successful():
-        return JsonResponse({"status": "SUCCESS", "answer": task.result})
+        return JsonResponse(
+            {
+                "status": "SUCCESS",
+                "answer": markdown.markdown(
+                    task.result,
+                    extensions=["fenced_code", "codehilite"],
+                ),
+            }
+        )
 
     if task.failed():
         return JsonResponse(

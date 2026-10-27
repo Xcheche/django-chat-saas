@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from ..forms import VerifyCodeForm
 from ..models import CustomUser
 from .anonymous_required import anonymous_required
+from common.emails import send_login_success_email
 
 
 
@@ -44,10 +45,18 @@ def code_verification(request):
                     return redirect("profiles:login")
 
                 login(request, user)
+                # -- Send email per any successful login --
+                send_login_success_email(
+                    user=user,
+                    ip_address=request.client_ip,
+                    login_time=timezone.localtime(),
+                )
+                # Clear session data after successful registration
                 for key in ("email", "full_name", "password", "register_code", "code_tries"):
                     request.session.pop(key, None)
                 return redirect("profiles:home")
 
+            # If the code is incorrect, increment the attempt counter and provide feedback
             request.session["code_tries"] = request.session.get("code_tries", 0) + 1
             if request.session["code_tries"] >= 5:
                 for key in ("email", "full_name", "password", "register_code", "code_tries"):

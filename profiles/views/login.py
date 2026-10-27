@@ -14,6 +14,7 @@ from .anonymous_required import anonymous_required
 from common.emails import (
     send_account_locked_email,
     send_account_unlocked_email,
+    send_login_success_email,
 )
 
 
@@ -160,6 +161,12 @@ def login_view(request):
                     messages.success(
                         request,
                         "You have logged in successfully.",
+                    )
+                    # Send email per any successful login
+                    send_login_success_email(
+                        user=authenticated_user,
+                        ip_address=request.client_ip,
+                        login_time=timezone.localtime(),
                     )
 
                     return redirect("profiles:home")

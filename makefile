@@ -144,3 +144,7 @@ test-functional:
 test-by-name:
 	@read -p "Enter the test name (e.g., test_home.py): " test_name; \
 	docker compose exec web pytest -v tests/functional/$$test_name
+
+
+test-unit-register-view:
+	docker compose run --rm web pytest tests/unit/test_auth_endpoints.py -v
