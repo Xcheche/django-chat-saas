@@ -150,6 +150,50 @@ class Profiles(TimeStampedModel):
         super(Profiles, self).save(*args, **kwargs)
 
 
+# ============================================
+# Chat Model
+# ============================================
+
+class ChatQuestion(TimeStampedModel):
+    """
+    Model to store chat questions and their corresponding answers.
+
+    This model is linked to the CustomUser model via a foreign key relationship.
+    It can be used to manage chat interactions and track their timestamps.
+    """
+
+    profiles = models.ForeignKey(
+        
+        Profiles,
+        on_delete=models.CASCADE,
+        verbose_name=_("Profile"),
+    )
+    prompt = models.TextField(verbose_name=_("Prompt"), blank=True, null=True)
+    # Unique id  and date_created comes from TimeStampedModel
+    userGenerated = models.BooleanField(
+        verbose_name=_("User Generated"),
+        default=False,
+    )
+    def __str__(self):
+        return f"Chat question for {self.profiles.user.email} - {self.prompt[:50]}"
+
+    class Meta:
+        verbose_name = _("Chat Question")
+        verbose_name_plural = _("Chat Questions")
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to set the date_created field when a new chat question is created.
+        """
+        if self.date_created is None:
+            self.date_created = timezone.localtime(timezone.now())
+        if self.uniqueId is None:
+            self.uniqueId = str(uuid.uuid4()).split("-")[4]  # Generate a unique ID without hyphens
+        super(ChatQuestion, self).save(*args, **kwargs)    
+        
+
+# ============================================
+# Reset Link Model
+# ============================================
 class ResetLink(TimeStampedModel):
     """
     Model to store password reset links for users.

@@ -168,6 +168,8 @@
   // Static avatar URLs — swap for dynamic user/profile images later
   var USER_AVATAR_URL = "{% static 'images/user-avatar.svg' %}";
   var AI_AVATAR_URL = "{% static 'images/ai-avatar.svg' %}";
+  var reasoningTimer = null;
+  var reasoningStartedAt = null;
 
   /**
    * AJAX chat handler
@@ -219,12 +221,12 @@
         pollChatTask(data.task_id);
       },
       error: function (xhr) {
-        removeTypingMessage();
+        var reasoningDuration = removeTypingMessage();
         var msg = "Something went wrong. Is Ollama running? Try: ollama serve";
         if (xhr.responseJSON && xhr.responseJSON.answer) {
           msg = xhr.responseJSON.answer;
         }
-        appendAiMessage(msg);
+        appendAiMessage(msg, reasoningDuration);
         setLoading(false);
       }
     });
@@ -234,8 +236,8 @@
     $.getJSON(`/chat-status/${taskId}/`)
       .done(function (data) {
         if (data.status === "SUCCESS" || data.status === "FAILURE") {
-          removeTypingMessage();
-          appendAiMessage(data.answer);
+          var reasoningDuration = removeTypingMessage();
+          appendAiMessage(data.answer, reasoningDuration);
           setLoading(false);
           return;
         }
@@ -245,12 +247,12 @@
         }, 1000);
       })
       .fail(function (xhr) {
-        removeTypingMessage();
+        var reasoningDuration = removeTypingMessage();
         var msg = "The AI could not complete your request.";
         if (xhr.responseJSON && xhr.responseJSON.answer) {
           msg = xhr.responseJSON.answer;
         }
-        appendAiMessage(msg);
+        appendAiMessage(msg, reasoningDuration);
         setLoading(false);
       });
   }
@@ -258,11 +260,13 @@
   /** Show a temporary AI typing indicator while the Celery task runs. */
   function appendTypingMessage() {
     removeTypingMessage();
+    reasoningStartedAt = Date.now();
     $("#list-group").append(`
       <div id="typing-message" class="list-group-item d-flex gap-3 py-3" aria-live="polite">
         <img src="${AI_AVATAR_URL}" alt="Cheche AI" class="chat-avatar">
         <div class="chat-message-text">
-          AI is typing <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+          AI is typing
+          <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
         </div>
       </div>
     `);
@@ -270,16 +274,31 @@
   }
 
   function removeTypingMessage() {
+    var duration = getReasoningDuration();
+    if (reasoningTimer) {
+      window.clearInterval(reasoningTimer);
+      reasoningTimer = null;
+    }
+    reasoningStartedAt = null;
     $("#typing-message").remove();
+    return duration;
+  }
+
+  function getReasoningDuration() {
+    if (!reasoningStartedAt) return "0 seconds";
+
+    var elapsedSeconds = Math.floor((Date.now() - reasoningStartedAt) / 1000);
+    return elapsedSeconds === 1 ? "1 second" : `${elapsedSeconds} seconds`;
   }
 
   /** Append an AI reply bubble to the message list. */
-  function appendAiMessage(html) {
+  function appendAiMessage(html, reasoningDuration) {
     var aiHtml = `
       <a href="#" class="list-group-item list-group-item-action d-flex gap-3 py-3" onclick="return false;">
         <img src="${AI_AVATAR_URL}" alt="Cheche AI" class="chat-avatar">
         <div class="d-flex gap-2 w-100 justify-content-between">
           <div>
+            <small class="d-block text-secondary mb-1">Reasoned for ${reasoningDuration || "0 seconds"}</small>
             <p class="mb-0 opacity-75 chat-message-text"></p>
           </div>
         </div>

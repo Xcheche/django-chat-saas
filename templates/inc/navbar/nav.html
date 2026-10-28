@@ -1,0 +1,51 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+
+            <!-- Site brand / logo text -->
+            <a class="navbar-brand" href="{% url 'profiles:home' %}">
+                Cheche Online Chat
+            </a>
+
+            <!-- Hamburger toggle for small screens -->
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible navigation links -->
+            <div
+                class="collapse navbar-collapse"
+                id="mainNavbar"
+            >
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'profiles:home' %}">
+                            Home
+                        </a>
+                    </li>
+
+                    <!-- Placeholder links for future SaaS features -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            Chat History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profiles:logout' %}">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+    </nav>
