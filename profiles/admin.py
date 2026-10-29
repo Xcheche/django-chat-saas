@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.emails import send_html_email
 from .enums import AccountStatus
-from .models import CustomUser, Profiles
+from .models import CustomUser, Profiles, ChatRecord
 
 
 @admin.register(CustomUser)
@@ -227,3 +227,33 @@ class ProfileAdmin(admin.ModelAdmin):
     @admin.display(ordering="user__full_name", description="Full name")
     def user_full_name(self, obj):
         return obj.user.full_name
+    
+
+
+#======================================
+# ChatRecord Admin
+#======================================
+
+
+class ChatRecordAdmin(admin.ModelAdmin):
+    """Admin interface for managing chat records."""
+    list_display = (
+        "profiles",
+        "prompt",
+        "userGenerated",
+        "date_created",
+    )
+    search_fields = (
+        "profiles__user__email",
+        "prompt",
+    )
+    ordering = ("-date_created",)
+    # Security to prevent bad actor form accessing the admin panel and viewing other users' chat records
+    def get_queryset(self, request):
+        """Limit the queryset to only show chat records for the logged-in user's profile."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs  # Superusers can see all records
+        return qs.filter(profiles__user=request.user)  # Regular users see only their own records
+
+admin.site.register(ChatRecord, ChatRecordAdmin)    

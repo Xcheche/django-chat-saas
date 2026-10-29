@@ -22,7 +22,9 @@ def home(request):
         # Guard against empty submissions before calling the LLM
         if not prompt:
             return JsonResponse({"answer": "Please enter a message."}, status=400)
-        task = generate_chat_response_task.delay(prompt)
+
+        profile = request.user.profiles
+        task = generate_chat_response_task.delay(prompt, profile.pk)
         return JsonResponse({"task_id": task.id}, status=202)
 
     # GET: render the chat interface

@@ -151,24 +151,24 @@ def login_view(request):
                         request.session.set_expiry(settings.SESSION_COOKIE_AGE)
                     else:
                         request.session.set_expiry(0)
-                # Checks for the last_login attribute before updating it to avoid potential errors with custom user models that may not have this field.
+
+                    # Check for last_login before updating custom user models.
                     if hasattr(authenticated_user, "last_login"):
                         authenticated_user.last_login = timezone.now()
                         authenticated_user.save(
                             update_fields=["last_login"]
                         )
 
-                    messages.success(
-                        request,
-                        "You have logged in successfully.",
-                    )
-                    # Send email per any successful login
+                    # Send an email after a successful login.
                     send_login_success_email(
                         user=authenticated_user,
                         ip_address=request.client_ip,
                         login_time=timezone.localtime(),
                     )
-
+                    messages.success(
+                        request,
+                        "You have logged in successfully.",
+                    )
                     return redirect("profiles:home")
 
                 # Authentication failed.

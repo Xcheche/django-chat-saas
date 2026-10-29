@@ -154,7 +154,7 @@ class Profiles(TimeStampedModel):
 # Chat Model
 # ============================================
 
-class ChatQuestion(TimeStampedModel):
+class ChatRecord(TimeStampedModel):
     """
     Model to store chat questions and their corresponding answers.
 
@@ -188,7 +188,7 @@ class ChatQuestion(TimeStampedModel):
             self.date_created = timezone.localtime(timezone.now())
         if self.uniqueId is None:
             self.uniqueId = str(uuid.uuid4()).split("-")[4]  # Generate a unique ID without hyphens
-        super(ChatQuestion, self).save(*args, **kwargs)    
+        super().save(*args, **kwargs)
         
 
 # ============================================

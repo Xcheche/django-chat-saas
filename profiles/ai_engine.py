@@ -19,6 +19,10 @@ want to switch back to OpenAI later.
 # import ollama  # Local LLM client; talks to Ollama daemon on localhost:11434
 from google import genai
 
+import profiles
+from .models import *
+import time
+
 # =================================================
 # ChatgPT Integration (OpenAI API)
 # ================================================
@@ -90,12 +94,18 @@ from google import genai
 # ================================================
 
 import os
+import logging
 
 from google import genai
 from google.genai import types
 
+logger = logging.getLogger(__name__)
+AI_ERROR = "AI_ERROR"
 
-def generateChatResponse(prompt):
+#=============================================
+# Generate Chat Response
+#=============================================
+def generateChatResponse(prompt,messages):
     """
     Generate an AI chat response using the Gemini API.
 
@@ -116,10 +126,10 @@ def generateChatResponse(prompt):
         # Create the Gemini client
         client = genai.Client(api_key=api_key)
 
-        # Send the system instruction and user's prompt
+        # Send the conversation history and the current prompt.
         response = client.models.generate_content(
             model="gemini-3-flash-preview",
-            contents=prompt,
+            contents=messages,
             config=types.GenerateContentConfig(
                 system_instruction=(
                     "Your name is Cheche. " "You are a helpful assistant."
@@ -131,11 +141,84 @@ def generateChatResponse(prompt):
 
         return response.text or "Sorry, I could not generate a response."
 
-    except Exception as error:
-        # Log the actual error for debugging
-        # print(f"Gemini error: {error}")
+    except Exception:
+        logger.exception("Gemini request failed")
+        return AI_ERROR
 
-        return (
-            "Oops, you beat the AI. Try a different question. "
-            "If the problem persists, come back later."
+#=============================================
+# Get Chat Response
+#=============================================
+def getChatResponse(prompt, profile):
+    """
+    Generate a chat response based on the user's prompt and profile.
+
+    Args:
+        prompt (str): The user's question or message.
+        profile (Profile): The user's profile object.
+        """
+
+    ## Step 1 =  collect Conversation
+    records = list(
+        ChatRecord.objects.filter(
+            profiles=profile,
+            prompt__isnull=False,
         )
+        .order_by("-date_created")[:20]
+    )
+    records.reverse()
+
+
+
+    ## Append and Create Messages [] list
+    messages = []
+
+
+    for record in records:
+        role = "user" if record.userGenerated else "model"
+        messages.append(
+            types.Content(
+                role=role,
+                parts=[types.Part.from_text(text=record.prompt)],
+            )
+        )
+
+    ## Append the current question to the messages list  
+    messages.append(
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=prompt)],
+        )
+    )
+
+
+    ## Call the API for a response
+    res = generateChatResponse(prompt, messages)
+
+
+    ## Save the prompt and response to the database.
+    if res != AI_ERROR:
+        ChatRecord.objects.create(
+            profiles=profile,
+            prompt=prompt,
+            userGenerated=True,
+        )
+        # Save the AI's response to the database as well
+        ChatRecord.objects.create(
+            profiles=profile,
+            prompt=res,
+            userGenerated=False,
+        )
+    
+
+
+      
+
+
+   ## Resturn the response to the user
+    if res == AI_ERROR:
+        return (
+            "The AI service is temporarily unavailable because its request "
+            "limit has been reached. Please try again later."
+        )
+
+    return res
