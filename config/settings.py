@@ -237,6 +237,14 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Africa/Lagos'
+CELERY_BEAT_SCHEDULE = {
+    'delete-old-chat-records-daily': {
+        'task': 'profiles.tasks.delete_old_chat_records',
+        'schedule': 86400,
+        # for testing purposes, you can set a shorter duration, e.g., 1 minute:
+        # 'schedule': 300,
+    },
+}
 
 
 # Celery Beat Scheduler 

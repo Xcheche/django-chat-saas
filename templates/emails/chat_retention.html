@@ -1,0 +1,11 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<p>Hello,</p>
+
+<p>The scheduled chat retention cleanup has completed.</p>
+
+<p><strong>{{ deleted_count }}</strong> chat record{{ deleted_count|pluralize }} older than {{ cutoff|date:"F j, Y H:i T" }} {{ deleted_count|pluralize:"was,were" }} deleted.</p>
+
+<p>No action is required.</p>
+{% endblock %}

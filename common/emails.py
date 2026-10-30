@@ -113,3 +113,15 @@ def send_password_reset_email(*, user, reset_url: str) -> None:
             "reset_url": reset_url,
         },
     )
+
+
+def send_chat_retention_email(*, recipient: str, deleted_count: int, cutoff) -> None:
+    send_html_email(
+        subject="Chat Retention Cleanup Completed",
+        recipient=recipient,
+        template_name="emails/chat_retention.html",
+        context={
+            "deleted_count": deleted_count,
+            "cutoff": cutoff,
+        },
+    )

@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: dockerfile
-    command: celery -A config worker --loglevel=info --events
+    command: celery -A config worker --loglevel=info  -B --events
     volumes:
       - .:/app
     depends_on:

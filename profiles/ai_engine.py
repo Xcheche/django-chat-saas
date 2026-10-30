@@ -172,7 +172,7 @@ def getChatResponse(prompt, profile):
     ## Append and Create Messages [] list
     messages = []
 
-
+    # Append previous chat records to the messages list, preserving the order of conversation.
     for record in records:
         role = "user" if record.userGenerated else "model"
         messages.append(
